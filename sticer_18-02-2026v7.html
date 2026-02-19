@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор наклеек на провода 25-04-2025</title>
+    <style>
+        .t0 {
+            margin-top: 0.1em;
+            margin-bottom: 0.1em;
+            font-weight: bold;
+        }
+        .t1 {
+            transform: scale(-1);
+            margin-top: 0.1em;
+            margin-bottom: 1.5em;
+            font-weight: bold;
+        }
+        .content {
+            width: 1654px;
+            height: 2339px;
+            margin: auto;
+            background-color: #FFFFFF;
+        }
+        .td1 {
+            border-bottom-style: dashed;
+            border-top-style: dashed;
+            border-left-style: dashed;
+            border-right-style: dashed;
+        }
+        .table1 {
+            border-bottom-style: none;
+            border-top-style: none;
+            border-left-style: none;
+            border-right-style: none;
+        }
+        .textarea-container {
+            display: flex;
+            align-items: flex-start;
+        }
+        .settings {
+            margin-left: 20px;
+        }
+        .settings label, .settings input {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .settings label {
+            width: 180px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .settings input[type="number"], .settings input[type="checkbox"] {
+            width: 60px;
+            text-align: center;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #tableContainer, #tableContainer * {
+                visibility: visible;
+            }
+            #tableContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            .table1 tr:nth-child(8n+1) td {
+                padding-top: var(--first-row-margin);
+            }
+            .table1 tr:not(:nth-child(8n+1)) {
+                margin-bottom: var(--row-spacing);
+            }
+            .table1 tr:not(:nth-child(1)):not(:nth-child(8n+1)) td {
+                padding-top: var(--text-margin);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="textarea-container">
+            <textarea id="inputText" rows="22" cols="50" style="overflow-y: scroll;"></textarea>
+            <div class="settings">
+                <div>
+                    <label for="fontSize">Высота шрифта:</label>
+                    <input type="number" id="fontSize" value="4">
+                </div>
+                <div>
+                    <label for="firstRowMargin">Отступ первой строки:</label>
+                    <input type="number" id="firstRowMargin" value="40">
+                </div>
+                <div>
+                    <label for="rowSpacing">Отступ строки:</label>
+                    <input type="number" id="rowSpacing" value="15">
+                </div>
+                <div>
+                    <label for="textMargin">Отступ текста строк:</label>
+                    <input type="number" id="textMargin" value="52">
+                </div>
+                <div>
+                    <label for="disableBorders">Выключить границы:</label>
+                    <input type="checkbox" id="disableBorders">
+                </div>
+            </div>
+        </div>
+        <button onclick="generateTable()">Generate Table</button>
+        <div id="tableContainer"></div>
+    </div>
+
+    <script>
+        function generateTable() {
+            const inputText = document.getElementById('inputText').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const firstRowMargin = document.getElementById('firstRowMargin').value;
+            const rowSpacing = document.getElementById('rowSpacing').value;
+            const textMargin = document.getElementById('textMargin').value;
+            const disableBorders = document.getElementById('disableBorders').checked;
+
+            const columnCount = 7;   // 3 пары (6) + 1 одиночный
+            const rowCount = 8;
+            const columnWidth = 180;
+            const columnHeight = 120;
+            const cellSpacing = 0;
+
+            const lines = inputText.split('\n');
+            let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+            let row = '<tr>';
+            let rowIndex = 0;
+            let lineIndex = 0;
+
+            while (lineIndex < lines.length) {
+                const isFirstRowInGroup = (rowIndex % rowCount === 0);
+                const marginTop = isFirstRowInGroup
+                    ? firstRowMargin
+                    : (rowIndex !== 0 && rowIndex % rowCount !== 0 ? textMargin : 0);
+
+                let cellsInRow = 0;
+
+                // 1-я пара (строка 1)
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    const line1 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line1, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 2-я пара (строка 2)
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    const line2 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line2, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 3-я пара (строка 3)
+                let line3 = '';
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    line3 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 7-й столбец, тоже с зеркалом, повторяет текст 3‑й строки
+		// 18-02-2025 Фишман
+		if (cellsInRow < columnCount && line3 !== '') 
+		{
+    			row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+    			cellsInRow++;
+		}
+
+                row += '</tr>';
+                tableHTML += row;
+                row = '<tr>';
+                rowIndex++;
+            }
+
+            tableHTML += '</table>';
+            document.getElementById('tableContainer').innerHTML =
+                `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+        }
+
+        function createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, withMirror) {
+            return `<td class="td1" valign="top" align="center"
+                        style="
+                            width: ${columnWidth}px;
+                            height: ${columnHeight}px;
+                            padding-bottom: ${rowSpacing}px;
+                            padding-top: ${marginTop}px;
+                            border-style: ${disableBorders ? 'none' : 'dashed'};
+                        ">
+                        <p class="t0"><font size="${fontSize}">${text}</font></p>
+                        ${withMirror
+                            ? `<p class="t1"><font size="${fontSize}">${text}</font></p>`
+                            : ''}
+                    </td>`;
+        }
+    </script>
+</body>
+</html>

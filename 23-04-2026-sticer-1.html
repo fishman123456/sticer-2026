@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор наклеек на провода 25-04-2025</title>
+  <style>
+    .t0 {
+      margin-top: 0.1em;
+      margin-bottom: 0.1em;
+      font-weight: bold;
+    }
+    .t1 {
+      transform: scale(-1);
+      margin-top: 0.1em;
+      margin-bottom: 1.5em;
+      font-weight: bold;
+    }
+    .content {
+      width: 1654px;
+      height: 2339px;
+      margin: auto;
+      background-color: #FFFFFF;
+    }
+    .td1 {
+      border-bottom-style: dashed;
+      border-top-style: dashed;
+      border-left-style: dashed;
+      border-right-style: dashed;
+    }
+    .table1 {
+      border-bottom-style: none;
+      border-top-style: none;
+      border-left-style: none;
+      border-right-style: none;
+    }
+    .textarea-container {
+      display: flex;
+      align-items: flex-start;
+    }
+    .settings {
+      margin-left: 20px;
+    }
+    .settings label, .settings input {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .settings label {
+      width: 200px;
+      text-align: right;
+      margin-right: 10px;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider {
+      width: 200px;
+    }
+    .value-display {
+      width: 50px;
+      text-align: center;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #tableContainer, #tableContainer * {
+        visibility: visible;
+      }
+      #tableContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .table1 tr:nth-child(8n+1) td {
+        padding-top: var(--first-row-margin);
+      }
+      .table1 tr:not(:nth-child(8n+1)) {
+        margin-bottom: var(--row-spacing);
+      }
+      .table1 tr:not(:nth-child(1)):not(:nth-child(8n+1)) td {
+        padding-top: var(--text-margin);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="textarea-container">
+      <textarea id="inputText" rows="22" cols="50" style="overflow-y: scroll;"></textarea>
+      <div class="settings">
+        <div class="slider-container">
+          <label for="fontSize">Высота шрифта:</label>
+          <input type="range" id="fontSize" class="slider" min="1" max="10" value="4">
+          <input type="number" id="fontSizeValue" class="value-display" value="4">
+        </div>
+        <div class="slider-container">
+          <label for="firstRowMargin">Отступ первой строки от верха листа:</label>
+          <input type="range" id="firstRowMargin" class="slider" min="0" max="100" value="40">
+          <input type="number" id="firstRowMarginValue" class="value-display" value="40">
+        </div>
+        <div class="slider-container">
+          <label for="rowSpacing">Отступ после первой строки:</label>
+          <input type="range" id="rowSpacing" class="slider" min="0" max="50" value="15">
+          <input type="number" id="rowSpacingValue" class="value-display" value="15">
+        </div>
+        <div class="slider-container">
+          <label for="textMargin">Отступ текста 2 и последующих строк:</label>
+          <input type="range" id="textMargin" class="slider" min="0" max="100" value="52">
+          <input type="number" id="textMarginValue" class="value-display" value="52">
+        </div>
+        <div class="slider-container">
+          <label for="columnCount">Количество столбцов:</label>
+          <input type="range" id="columnCount" class="slider" min="1" max="10" value="7">
+          <input type="number" id="columnCountValue" class="value-display" value="7">
+        </div>
+        <div class="slider-container">
+          <label for="duplicateCount">Количество дубликатов:</label>
+          <input type="range" id="duplicateCount" class="slider" min="1" max="50" value="1">
+          <input type="number" id="duplicateCountValue" class="value-display" value="1">
+        </div>
+        <div>
+          <label for="disableBorders">Выключить границы:</label>
+          <input type="checkbox" id="disableBorders">
+        </div>
+      </div>
+    </div>
+    <button onclick="generateTable()">Generate Table</button>
+    <div id="tableContainer"></div>
+  </div>
+
+  <script>
+    // Синхронизация ползунков и числовых полей
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      const valueDisplay = document.getElementById(slider.id + 'Value');
+      slider.addEventListener('input', () => {
+        valueDisplay.value = slider.value;
+      });
+      valueDisplay.addEventListener('input', () => {
+        slider.value = valueDisplay.value;
+      });
+    });
+
+    function generateTable() {
+      const inputText = document.getElementById('inputText').value;
+      const fontSize = document.getElementById('fontSize').value;
+      const firstRowMargin = document.getElementById('firstRowMargin').value;
+      const rowSpacing = document.getElementById('rowSpacing').value;
+      const textMargin = document.getElementById('textMargin').value;
+      const columnCount = parseInt(document.getElementById('columnCount').value, 10);
+      const duplicateCount = parseInt(document.getElementById('duplicateCount').value, 10);
+      const disableBorders = document.getElementById('disableBorders').checked;
+
+      const rowCount = 8; // Количество строк в группе (для учёта отступов)
+      const columnWidth = 180;
+      const columnHeight = 120;
+      const cellSpacing = 0;
+
+      // Разбиваем текст на строки и фильтруем пустые
+      const lines = inputText.split('\n').filter(line => line.trim() !== '');
+
+      // Создаём массив с дублированными строками
+      let duplicatedLines = [];
+      lines.forEach(line => {
+        for (let i = 0; i < duplicateCount; i++) {
+          duplicatedLines.push(line);
+        }
+      });
+
+      let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+      let lineIndex = 0; // Индекс текущей строки текста
+
+      // Генерируем строки таблицы, пока есть данные
+      while (lineIndex < duplicatedLines.length) {
+        let currentRow = '<tr>'; // Начинаем новую строку таблицы
+
+        // Заполняем строку ячейками (до columnCount или пока есть текст)
+        for (let col = 0; col < columnCount && lineIndex < duplicatedLines.length; col++) {
+          // Определяем отступ для текущей ячейки
+          const isFirstRowInGroup = (Math.floor(lineIndex / columnCount) % rowCount === 0);
+          const marginTop = isFirstRowInGroup
+            ? firstRowMargin
+            : (lineIndex !== 0 ? textMargin : 0);
+
+          const text = duplicatedLines[lineIndex];
+          currentRow += createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+          lineIndex++;
+                  }
+
+        currentRow += '</tr>'; // Закрываем строку таблицы
+        tableHTML += currentRow;
+      }
+
+      tableHTML += '</table>';
+      document.getElementById('tableContainer').innerHTML =
+        `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+    }
+
+    function createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, withMirror) {
+      return `<td class="td1" valign="top" align="center"
+        style="
+        width: ${columnWidth}px;
+        height: ${columnHeight}px;
+        padding-bottom: ${rowSpacing}px;
+        padding-top: ${marginTop}px;
+        border-style: ${disableBorders ? 'none' : 'dashed'};
+        ">
+        <p class="t0"><font size="${fontSize}">${text}</font></p>
+        ${withMirror
+          ? `<p class="t1"><font size="${fontSize}">${text}</font></p>`
+          : ''}
+      </td>`;
+    }
+  </script>
+</body>
+</html>

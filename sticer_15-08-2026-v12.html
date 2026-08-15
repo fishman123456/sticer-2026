@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор наклеек на провода 25-04-2025</title>
+  <style>
+    .t0 {
+      margin-top: 0.1em;
+      margin-bottom: 0.1em;
+      font-weight: bold;
+    }
+    .t1 {
+      transform: scale(-1);
+      margin-top: 0.1em;
+      margin-bottom: 1.5em;
+      font-weight: bold;
+    }
+    .content {
+      width: 1654px;
+      height: 2339px;
+      margin: auto;
+      background-color: #FFFFFF;
+    }
+    .td1 {
+      border-bottom-style: dashed;
+      border-top-style: dashed;
+      border-left-style: dashed;
+      border-right-style: dashed;
+    }
+    .table1 {
+      border-bottom-style: none;
+      border-top-style: none;
+      border-left-style: none;
+      border-right-style: none;
+    }
+    .textarea-container {
+      display: flex;
+      align-items: flex-start;
+    }
+    .settings {
+      margin-left: 20px;
+    }
+    .settings label, .settings input {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .settings label {
+      width: 300px;
+      text-align: left;
+      margin-right: 10px;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider {
+      width: 200px;
+    }
+    .value-display {
+      width: 50px;
+      text-align: center;
+    }
+
+    /* Предварительный просмотр */
+    body.preview-mode {
+      background: #777;
+    }
+
+    #previewToolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+      background: #333;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    body:not(.preview-mode) #previewToolbar {
+      display: none;
+    }
+
+    .preview-layout {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .preview-pages {
+      flex: 1;
+    }
+
+    .preview-info {
+      width: 260px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .preview-info h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .preview-info dl {
+      margin: 0;
+    }
+
+    .preview-info dt {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .preview-info dd {
+      margin: 0 0 10px 0;
+    }
+
+    .print-page {
+      box-sizing: border-box;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 20px auto;
+      padding: 10mm;
+      background: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .print-page + .print-page {
+      page-break-before: always;
+    }
+
+    body.preview-mode .content {
+      display: none;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        background: white;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      /* Печатаем только листы из превью */
+      #previewContainer,
+      #previewContainer * {
+        visibility: visible;
+      }
+
+      #previewContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+      }
+
+      .preview-layout {
+        display: block;
+        padding: 0;
+      }
+
+      .preview-pages {
+        width: 100%;
+      }
+
+      .preview-info {
+        display: none;
+      }
+
+      .print-page {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 10mm;
+        box-shadow: none;
+        page-break-after: always;
+      }
+
+      #previewToolbar,
+      .content,
+      #tableContainer {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="textarea-container">
+      <textarea id="inputText" rows="22" cols="50" style="overflow-y: scroll;" placeholder="Введите данные (каждая строка — отдельная наклейка)"></textarea>
+      <div class="settings">
+        <div class="slider-container">
+          <label for="fontSize">Высота шрифта:</label>
+          <input type="range" id="fontSize" class="slider" min="1" max="10" value="4">
+          <input type="number" id="fontSizeValue" class="value-display" value="4">
+        </div>
+        <div class="slider-container">
+          <label for="firstRowMargin">Отступ первой строки от верха листа:</label>
+          <input type="range" id="firstRowMargin" class="slider" min="0" max="100" value="40">
+          <input type="number" id="firstRowMarginValue" class="value-display" value="40">
+        </div>
+        <div class="slider-container">
+          <label for="rowSpacing">Отступ после первой строки:</label>
+          <input type="range" id="rowSpacing" class="slider" min="0" max="50" value="15">
+          <input type="number" id="rowSpacingValue" class="value-display" value="15">
+        </div>
+        <div class="slider-container">
+          <label for="textMargin">Отступ текста 2 и последующих строк:</label>
+          <input type="range" id="textMargin" class="slider" min="0" max="100" value="52">
+          <input type="number" id="textMarginValue" class="value-display" value="52">
+        </div>
+        <div class="slider-container">
+          <label for="columnCount">Количество столбцов:</label>
+          <input type="range" id="columnCount" class="slider" min="1" max="10" value="7">
+          <input type="number" id="columnCountValue" class="value-display" value="7">
+        </div>
+        <div class="slider-container">
+          <label for="duplicateCount">Количество дубликатов:</label>
+          <input type="range" id="duplicateCount" class="slider" min="1" max="50" value="1">
+          <input type="number" id="duplicateCountValue" class="value-display" value="1">
+        </div>
+        <div>
+          <label for="disableBorders">Выключить границы:</label>
+          <input type="checkbox" id="disableBorders">
+        </div>
+      </div>
+    </div>
+    <button onclick="generateTable()">Generate Table</button>
+    <button onclick="createPreview()">Предварительный просмотр</button>
+    <div id="tableContainer"></div>
+  </div>
+
+  <!-- Панель управления в режиме просмотра -->
+  <div id="previewToolbar">
+    <button type="button" id="printBtn">Печать</button>
+    <button type="button" id="closePreviewBtn">Закрыть просмотр</button>
+  </div>
+
+  <!-- Контейнер для превью -->
+  <div id="previewContainer" style="display:none;">
+    <div class="preview-layout">
+      <div class="preview-pages" id="previewPages"></div>
+      <div class="preview-info">
+        <h3>Размеры</h3>
+        <dl>
+          <dt>Размер страницы:</dt>
+          <dd id="infoPageSize">210 × 297 мм (A4)</dd>
+
+          <dt>Отступ от верха до первой строки:</dt>
+          <dd id="infoFirstRowMargin">–</dd>
+
+          <dt>Отступ между строками:</dt>
+          <dd id="infoRowSpacing">–</dd>
+
+          <dt>Размер одной наклейки:</dt>
+          <dd id="infoLabelSize">–</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Синхронизация ползунков и числовых полей
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      const valueDisplay = document.getElementById(slider.id + 'Value');
+      slider.addEventListener('input', () => {
+        valueDisplay.value = slider.value;
+      });
+      valueDisplay.addEventListener('input', () => {
+        slider.value = valueDisplay.value;
+      });
+    });
+
+    let originalTableHTML = "";
+
+    function generateTable() {
+      const inputText = document.getElementById('inputText').value;
+      const fontSize = document.getElementById('fontSize').value;
+      const firstRowMargin = document.getElementById('firstRowMargin').value;
+      const rowSpacing = document.getElementById('rowSpacing').value;
+      const textMargin = document.getElementById('textMargin').value;
+      const columnCount = parseInt(document.getElementById('columnCount').value, 10);
+      const duplicateCount = parseInt(document.getElementById('duplicateCount').value, 10);
+      const disableBorders = document.getElementById('disableBorders').checked;
+
+      const rowCount = 8;
+      const columnWidth = 180;
+      const columnHeight = 120;
+      const cellSpacing = 0;
+
+      const lines = inputText.split('\n').filter(line => line.trim() !== '');
+
+      let duplicatedLines = [];
+      lines.forEach(line => {
+        for (let i = 0; i < duplicateCount; i++) {
+          duplicatedLines.push(line);
+        }
+      });
+
+      let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+      let lineIndex = 0;
+
+      while (lineIndex < duplicatedLines.length) {
+        let currentRow = '<tr>';
+
+        for (let col = 0; col < columnCount && lineIndex < duplicatedLines.length; col++) {
+          const isFirstRowInGroup = (Math.floor(lineIndex / columnCount) % rowCount === 0);
+          const marginTop = isFirstRowInGroup
+            ? firstRowMargin
+            : (lineIndex !== 0 ? textMargin : 0);
+
+          const text = duplicatedLines[lineIndex];
+          currentRow += createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+          lineIndex++;
+        }
+
+        currentRow += '</tr>';
+        tableHTML += currentRow;
+      }
+
+      tableHTML += '</table>';
+
+      const wrapperHTML =
+        `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+
+      const tableContainer = document.getElementById('tableContainer');
+      tableContainer.innerHTML = wrapperHTML;
+
+      originalTableHTML = tableHTML;
+
+      closePreview();
+    }
+
+    function createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, withMirror) {
+      return `<td class="td1" valign="top" align="center"
+        style="
+        width: ${columnWidth}px;
+        height: ${columnHeight}px;
+        padding-bottom: ${rowSpacing}px;
+        padding-top: ${marginTop}px;
+        border-style: ${disableBorders ? 'none' : 'dashed'};
+        ">
+        <p class="t0"><font size="${fontSize}">${text}</font></p>
+        ${withMirror
+          ? `<p class="t1"><font size="${fontSize}">${text}</font></p>`
+          : ''}
+      </td>`;
+    }
+
+    function pxToMm(px) {
+      const pxPerMm = 3.7795275591; // 96 DPI
+      return (px / pxPerMm).toFixed(1);
+    }
+
+    function createPreview() {
+      const tableContainer = document.getElementById('tableContainer');
+      const previewContainer = document.getElementById('previewContainer');
+      const previewPages = document.getElementById('previewPages');
+
+      if (!originalTableHTML || originalTableHTML.trim() === "") {
+        alert("Сначала сформируйте таблицу (Generate Table).");
+        return;
+      }
+
+      previewPages.innerHTML = "";
+      previewContainer.style.display = "block";
+
+      const fontSize = document.getElementById('fontSize').value;
+      const firstRowMargin = document.getElementById('firstRowMargin').value;
+      const rowSpacing = document.getElementById('rowSpacing').value;
+      const textMargin = document.getElementById('textMargin').value;
+      const columnCount = parseInt(document.getElementById('columnCount').value, 10);
+      const duplicateCount = parseInt(document.getElementById('duplicateCount').value, 10);
+      const disableBorders = document.getElementById('disableBorders').checked;
+
+      const columnWidth = 180;
+      const columnHeight = 120;
+
+      // Обновляем панель с размерами (в мм)
+      document.getElementById('infoFirstRowMargin').textContent = pxToMm(firstRowMargin) + " мм";
+      document.getElementById('infoRowSpacing').textContent = pxToMm(rowSpacing) + " мм";
+      document.getElementById('infoLabelSize').textContent =
+        `${pxToMm(columnWidth)} × ${pxToMm(columnHeight)} мм`;
+
+      const rowCount = 8;
+      const cellSpacing = 0;
+
+      const mmToPx = 3.77953;
+
+      const pageHeightMm = 297;
+      const pageMarginMm = 10;
+      const usableHeightMm = pageHeightMm - 2 * pageMarginMm;
+      const usableHeightPx = usableHeightMm * mmToPx;
+
+      const rowHeightPx =
+        parseFloat(firstRowMargin) +
+        parseFloat(fontSize) * 1.5 +
+        parseFloat(rowSpacing) +
+        10;
+
+      const rowsPerPage = Math.max(1, Math.floor(usableHeightPx / rowHeightPx));
+
+      // Парсим существующую таблицу
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = originalTableHTML;
+      const table = tempDiv.querySelector("table");
+      const rows = Array.from(table.querySelectorAll("tr"));
+
+      let startRow = 0;
+
+      while (startRow < rows.length) {
+        const endRow = Math.min(rows.length, startRow + rowsPerPage);
+
+        const pageDiv = document.createElement("div");
+        pageDiv.className = "print-page";
+
+        let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+        for (let i = startRow; i < endRow; i++) {
+          tableHTML += rows[i].outerHTML;
+        }
+
+        tableHTML += '</table>';
+
+        pageDiv.innerHTML =
+          `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+
+        previewPages.appendChild(pageDiv);
+
+        startRow = endRow;
+      }
+
+      document.body.classList.add("preview-mode");
+
+      const contentButtons = document.querySelectorAll(".content button");
+      if (contentButtons.length >= 2) {
+        contentButtons[0].style.display = "none";
+        contentButtons[1].style.display = "none";
+      }
+
+      const printBtn = document.getElementById("printBtn");
+      const closePreviewBtn = document.getElementById("closePreviewBtn");
+
+      if (printBtn) printBtn.style.display = "inline-block";
+      if (closePreviewBtn) closePreviewBtn.style.display = "inline-block";
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function closePreview() {
+      document.body.classList.remove("preview-mode");
+
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.style.display = "none";
+
+      const contentButtons = document.querySelectorAll(".content button");
+      if (contentButtons.length >= 2) {
+        contentButtons[0].style.display = "inline-block";
+        contentButtons[1].style.display = "inline-block";
+      }
+
+      const printBtn = document.getElementById("printBtn");
+      const closePreviewBtn = document.getElementById("closePreviewBtn");
+
+      if (printBtn) printBtn.style.display = "none";
+      if (closePreviewBtn) closePreviewBtn.style.display = "none";
+
+      if (originalTableHTML) {
+        const firstRowMargin = document.getElementById('firstRowMargin').value;
+        const rowSpacing = document.getElementById('rowSpacing').value;
+        const textMargin = document.getElementById('textMargin').value;
+
+        const tableContainer = document.getElementById('tableContainer');
+        tableContainer.innerHTML =
+          `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${originalTableHTML}</div>`;
+      }
+    }
+
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
+  </script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор наклеек на провода 15-08-2025 U_83</title>
+    <style>
+        .t0 {
+            margin-top: 0.1em;
+            margin-bottom: 0.1em;
+            font-weight: bold;
+        }
+        .t1 {
+            transform: scale(-1);
+            margin-top: 0.1em;
+            margin-bottom: 1.5em;
+            font-weight: bold;
+        }
+        .content {
+            width: 1654px;
+            height: 2339px;
+            margin: auto;
+            background-color: #FFFFFF;
+        }
+        .td1 {
+            border-bottom-style: dashed;
+            border-top-style: dashed;
+            border-left-style: dashed;
+            border-right-style: dashed;
+        }
+        .table1 {
+            border-bottom-style: none;
+            border-top-style: none;
+            border-left-style: none;
+            border-right-style: none;
+        }
+        .textarea-container {
+            display: flex;
+            align-items: flex-start;
+        }
+        .settings {
+            margin-left: 20px;
+        }
+        .settings label, .settings input {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .settings label {
+            width: 180px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .settings input[type="number"], .settings input[type="checkbox"] {
+            width: 60px;
+            text-align: center;
+        }
+
+        /* Предварительный просмотр */
+        body.preview-mode {
+            background: #777;
+        }
+
+        #previewToolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #333;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body:not(.preview-mode) #previewToolbar {
+            display: none;
+        }
+
+        .print-page {
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            padding: 10mm;
+            background: white;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .print-page + .print-page {
+            page-break-before: always;
+        }
+
+        body.preview-mode .content {
+            display: none;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                background: white;
+            }
+
+            body * {
+                visibility: hidden;
+            }
+
+            #tableContainer, #tableContainer * {
+                visibility: visible;
+            }
+
+            #tableContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .print-page {
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 10mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+
+            #previewToolbar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="textarea-container">
+            <textarea id="inputText" rows="22" cols="50" style="overflow-y: scroll;"></textarea>
+            <div class="settings">
+                <div>
+                    <label for="fontSize">Высота шрифта:</label>
+                    <input type="number" id="fontSize" value="4">
+                </div>
+                <div>
+                    <label for="firstRowMargin">Отступ первой строки:</label>
+                    <input type="number" id="firstRowMargin" value="40">
+                </div>
+                <div>
+                    <label for="rowSpacing">Отступ строки:</label>
+                    <input type="number" id="rowSpacing" value="15">
+                </div>
+                <div>
+                    <label for="textMargin">Отступ текста строк:</label>
+                    <input type="number" id="textMargin" value="52">
+                </div>
+                <div>
+                    <label for="disableBorders">Выключить границы:</label>
+                    <input type="checkbox" id="disableBorders">
+                </div>
+            </div>
+        </div>
+        <button onclick="generateTable()">Generate Table</button>
+        <button onclick="createPreview()">Предварительный просмотр</button>
+        <div id="tableContainer"></div>
+    </div>
+
+    <!-- Панель управления в режиме просмотра -->
+    <div id="previewToolbar">
+        <button type="button" id="printBtn">Печать</button>
+        <button type="button" id="closePreviewBtn">Закрыть просмотр</button>
+    </div>
+
+    <script>
+        let lastParams = null;
+
+        function generateTable() {
+            const inputText = document.getElementById('inputText').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const firstRowMargin = document.getElementById('firstRowMargin').value;
+            const rowSpacing = document.getElementById('rowSpacing').value;
+            const textMargin = document.getElementById('textMargin').value;
+            const disableBorders = document.getElementById('disableBorders').checked;
+
+            const columnCount = 7;   // 3 пары (6) + 1 одиночный
+            const rowCount = 8;
+            const columnWidth = 180;
+            const columnHeight = 120;
+            const cellSpacing = 0;
+
+            const lines = inputText.split('\n');
+            let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+            let row = '<tr>';
+            let rowIndex = 0;
+            let lineIndex = 0;
+
+            while (lineIndex < lines.length) {
+                const isFirstRowInGroup = (rowIndex % rowCount === 0);
+                const marginTop = isFirstRowInGroup
+                    ? firstRowMargin
+                    : (rowIndex !== 0 && rowIndex % rowCount !== 0 ? textMargin : 0);
+
+                let cellsInRow = 0;
+
+                // 1-я пара (строка 1)
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    const line1 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line1, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 2-я пара (строка 2)
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    const line2 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line2, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 3-я пара (строка 3)
+                let line3 = '';
+                if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                    line3 = lines[lineIndex];
+                    for (let k = 0; k < 2; k++) {
+                        row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+                    lineIndex++;
+                }
+
+                // 7-й столбец, тоже с зеркалом, повторяет текст 3‑й строки
+                if (cellsInRow < columnCount && line3 !== '') {
+                    row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                    cellsInRow++;
+                }
+
+                row += '</tr>';
+                tableHTML += row;
+                row = '<tr>';
+                rowIndex++;
+            }
+
+            tableHTML += '</table>';
+            document.getElementById('tableContainer').innerHTML =
+                `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+
+            lastParams = {
+                inputText,
+                fontSize,
+                firstRowMargin,
+                rowSpacing,
+                textMargin,
+                disableBorders
+            };
+
+            // Если открыт режим просмотра, закрываем его
+            closePreview();
+        }
+
+        function createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, withMirror) {
+            return `<td class="td1" valign="top" align="center"
+                        style="
+                            width: ${columnWidth}px;
+                            height: ${columnHeight}px;
+                            padding-bottom: ${rowSpacing}px;
+                            padding-top: ${marginTop}px;
+                            border-style: ${disableBorders ? 'none' : 'dashed'};
+                        ">
+                        <p class="t0"><font size="${fontSize}">${text}</font></p>
+                        ${withMirror
+                            ? `<p class="t1"><font size="${fontSize}">${text}</font></p>`
+                            : ''}
+                    </td>`;
+        }
+
+        function createPreview() {
+            if (!lastParams) {
+                alert("Сначала сформируйте таблицу (Generate Table).");
+                return;
+            }
+
+            const {
+                inputText,
+                fontSize,
+                firstRowMargin,
+                rowSpacing,
+                textMargin,
+                disableBorders
+            } = lastParams;
+
+            const columnCount = 7;
+            const columnWidth = 180;
+            const columnHeight = 120;
+            const cellSpacing = 0;
+
+            const mmToPt = 2.83465;
+
+            // Параметры листа A4
+            const pageHeightMm = 297;
+            const pageMarginMm = 10;
+            const usableHeightMm = pageHeightMm - 2 * pageMarginMm;
+            const usableHeightPx = usableHeightMm * 3.77953; // px при 96 DPI
+
+            // Оценка высоты одной строки таблицы (8 ячеек в ряду)
+            const rowHeightPx =
+                parseFloat(firstRowMargin) +
+                parseFloat(fontSize) * 1.5 +
+                parseFloat(rowSpacing) +
+                10; // запас
+
+            const rowsPerPage = Math.max(1, Math.floor(usableHeightPx / rowHeightPx));
+
+            const lines = inputText.split('\n');
+            const totalRows = Math.ceil(lines.length / 3); // по 3 строки текста на одну строку таблицы
+
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.innerHTML = "";
+
+            let startRow = 0;
+            let pageIndex = 0;
+
+            while (startRow < totalRows) {
+                const endRow = Math.min(totalRows, startRow + rowsPerPage);
+
+                const pageDiv = document.createElement("div");
+                pageDiv.className = "print-page";
+
+                let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+                let row = '<tr>';
+                let rowIndexInPage = 0;
+                let lineIndex = startRow * 3;
+
+                while (lineIndex < lines.length && rowIndexInPage < rowsPerPage) {
+                    const isFirstRowInGroup = (rowIndexInPage % 8 === 0);
+                    const marginTop = isFirstRowInGroup
+                        ? firstRowMargin
+                        : (rowIndexInPage !== 0 && rowIndexInPage % 8 !== 0 ? textMargin : 0);
+
+                    let cellsInRow = 0;
+
+                    // 1-я пара
+                    if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                        const line1 = lines[lineIndex];
+                        for (let k = 0; k < 2; k++) {
+                            row += createCell(line1, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                            cellsInRow++;
+                        }
+                        lineIndex++;
+                    }
+
+                    // 2-я пара
+                    if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                        const line2 = lines[lineIndex];
+                        for (let k = 0; k < 2; k++) {
+                            row += createCell(line2, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                            cellsInRow++;
+                        }
+                        lineIndex++;
+                    }
+
+                    // 3-я пара
+                    let line3 = '';
+                    if (lineIndex < lines.length && cellsInRow <= columnCount - 2) {
+                        line3 = lines[lineIndex];
+                        for (let k = 0; k < 2; k++) {
+                            row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                            cellsInRow++;
+                        }
+                        lineIndex++;
+                    }
+
+                    // 7-й столбец
+                    if (cellsInRow < columnCount && line3 !== '') {
+                        row += createCell(line3, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+                        cellsInRow++;
+                    }
+
+                    row += '</tr>';
+                    tableHTML += row;
+                    row = '<tr>';
+                    rowIndexInPage++;
+                }
+
+                tableHTML += '</table>';
+
+                pageDiv.innerHTML =
+                    `<div style="--first-row-margin: ${firstRowMargin}px; --row-spacing: ${rowSpacing}px; --text-margin: ${textMargin}px;">${tableHTML}</div>`;
+
+                tableContainer.appendChild(pageDiv);
+
+                startRow = endRow;
+                pageIndex++;
+            }
+
+            document.body.classList.add("preview-mode");
+
+            document.querySelectorAll(".content button")[0].style.display = "none";
+            document.querySelectorAll(".content button")[1].style.display = "none";
+            document.getElementById("printBtn").style.display = "inline-block";
+            document.getElementById("closePreviewBtn").style.display = "inline-block";
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function closePreview() {
+            document.body.classList.remove("preview-mode");
+
+            const buttons = document.querySelectorAll(".content button");
+            buttons[0].style.display = "inline-block";
+            buttons[1].style.display = "inline-block";
+
+            document.getElementById("printBtn").style.display = "none";
+            document.getElementById("closePreviewBtn").style.display = "none";
+
+            if (lastParams) {
+                generateTable();
+            }
+        }
+
+        document.getElementById("printBtn").addEventListener("click", () => window.print());
+        document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
+    </script>
+</body>
+</html>

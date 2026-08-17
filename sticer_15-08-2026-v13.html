@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Генератор наклеек на провода 25-04-2025</title>
+  <title>Генератор наклеек на провода 17-08-2026</title>
   <style>
     .t0 {
       margin-top: 0.1em;
@@ -288,6 +288,7 @@
     });
 
     let originalTableHTML = "";
+    let originalTableHTMLWithAutoFont = "";
 
     function generateTable() {
       const inputText = document.getElementById('inputText').value;
@@ -313,6 +314,7 @@
         }
       });
 
+      // 1) Таблица с фиксированным шрифтом (для отображения)
       let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
 
       let lineIndex = 0;
@@ -345,6 +347,22 @@
 
       originalTableHTML = tableHTML;
 
+      // 2) Таблица с автоподбором шрифта (для печати и превью)
+      originalTableHTMLWithAutoFont = generateTableWithAutoFont(
+        inputText,
+        parseFloat(fontSize),
+        parseFloat(firstRowMargin),
+        parseFloat(rowSpacing),
+        parseFloat(textMargin),
+        columnCount,
+        duplicateCount,
+        disableBorders,
+        columnWidth,
+        columnHeight,
+        cellSpacing,
+        rowCount
+      );
+
       closePreview();
     }
 
@@ -364,6 +382,96 @@
       </td>`;
     }
 
+    function createCellWithAutoFont(text, baseFontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, withMirror) {
+      // Доступная ширина для текста внутри ячейки (примерно)
+      const padding = 2; // небольшой запас
+      const availableWidth = columnWidth - padding * 2;
+
+      // Временный элемент для измерения
+      const measureSpan = document.createElement("span");
+      measureSpan.style.fontSize = baseFontSize + "px";
+      measureSpan.style.fontWeight = "bold";
+      measureSpan.style.whiteSpace = "nowrap";
+      measureSpan.style.position = "absolute";
+      measureSpan.style.visibility = "hidden";
+      measureSpan.textContent = text;
+      document.body.appendChild(measureSpan);
+
+      let fontSize = baseFontSize;
+      const minFont = 1;
+
+      while (measureSpan.offsetWidth > availableWidth && fontSize > minFont) {
+        fontSize -= 0.5;
+        measureSpan.style.fontSize = fontSize + "px";
+      }
+
+      document.body.removeChild(measureSpan);
+
+      return `<td class="td1" valign="top" align="center"
+        style="
+        width: ${columnWidth}px;
+        height: ${columnHeight}px;
+        padding-bottom: ${rowSpacing}px;
+        padding-top: ${marginTop}px;
+        border-style: ${disableBorders ? 'none' : 'dashed'};
+        ">
+        <p class="t0"><font size="${fontSize}">${text}</font></p>
+        ${withMirror
+          ? `<p class="t1"><font size="${fontSize}">${text}</font></p>`
+          : ''}
+      </td>`;
+    }
+
+    function generateTableWithAutoFont(
+      inputText,
+      fontSize,
+      firstRowMargin,
+      rowSpacing,
+      textMargin,
+      columnCount,
+      duplicateCount,
+      disableBorders,
+      columnWidth,
+      columnHeight,
+      cellSpacing,
+      rowCount
+    ) {
+      const lines = inputText.split('\n').filter(line => line.trim() !== '');
+
+      let duplicatedLines = [];
+      lines.forEach(line => {
+        for (let i = 0; i < duplicateCount; i++) {
+          duplicatedLines.push(line);
+        }
+      });
+
+      let tableHTML = `<table class="table1" border="${disableBorders ? '0' : '1'}" cellspacing="${cellSpacing}" cellpadding="1">`;
+
+      let lineIndex = 0;
+
+      while (lineIndex < duplicatedLines.length) {
+        let currentRow = '<tr>';
+
+        for (let col = 0; col < columnCount && lineIndex < duplicatedLines.length; col++) {
+          const isFirstRowInGroup = (Math.floor(lineIndex / columnCount) % rowCount === 0);
+          const marginTop = isFirstRowInGroup
+            ? firstRowMargin
+            : (lineIndex !== 0 ? textMargin : 0);
+
+          const text = duplicatedLines[lineIndex];
+          currentRow += createCellWithAutoFont(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+          lineIndex++;
+        }
+
+        currentRow += '</tr>';
+        tableHTML += currentRow;
+      }
+
+      tableHTML += '</table>';
+
+      return tableHTML;
+    }
+
     function pxToMm(px) {
       const pxPerMm = 3.7795275591; // 96 DPI
       return (px / pxPerMm).toFixed(1);
@@ -376,7 +484,7 @@
       const previewContainer = document.getElementById('previewContainer');
       const previewPages = document.getElementById('previewPages');
 
-      if (!originalTableHTML || originalTableHTML.trim() === "") {
+      if (!originalTableHTMLWithAutoFont || originalTableHTMLWithAutoFont.trim() === "") {
         alert("Сначала сформируйте таблицу (Generate Table).");
         return;
       }
@@ -412,9 +520,9 @@
 
       const cellSpacing = 0;
 
-      // Парсим существующую таблицу
+      // Парсим таблицу с автоподбором шрифта
       const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = originalTableHTML;
+      tempDiv.innerHTML = originalTableHTMLWithAutoFont;
       const table = tempDiv.querySelector("table");
       const rows = Array.from(table.querySelectorAll("tr"));
 
@@ -442,7 +550,8 @@
           const cells = row.querySelectorAll("td");
           cells.forEach(cell => {
             const text = cell.querySelector(".t0 font")?.textContent || "";
-            newCellsHTML += createCell(text, fontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
+            const baseFontSize = parseFloat(cell.querySelector(".t0 font")?.getAttribute("size")) || fontSize;
+            newCellsHTML += createCellWithAutoFont(text, baseFontSize, marginTop, disableBorders, columnWidth, columnHeight, rowSpacing, true);
           });
 
           tableHTML += `<tr>${newCellsHTML}</tr>`;

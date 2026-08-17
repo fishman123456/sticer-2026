@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор наклеек на провода 17-08-2026</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 8px;
+      font-family: Arial, sans-serif;
+    }
+
+    .content {
+      width: 1654px;
+      min-height: 2339px;
+      margin: auto;
+      background: #fff;
+    }
+
+    .textarea-container {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .settings {
+      margin-left: 20px;
+    }
+
+    .settings label,
+    .settings input {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .settings label {
+      width: 300px;
+      margin-right: 10px;
+      text-align: left;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 30px;
+    }
+
+    .slider {
+      width: 200px;
+    }
+
+    .value-display {
+      width: 55px;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 10px;
+      margin-right: 8px;
+      padding: 7px 14px;
+      cursor: pointer;
+    }
+
+    /* Обычная таблица */
+    #tableContainer {
+      width: 100%;
+    }
+
+    .table1 {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .td1 {
+      overflow: hidden;
+      border-style: dashed;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .label-text {
+      display: block;
+      width: 100%;
+      margin-top: 0.1em;
+      margin-bottom: 0.1em;
+      overflow: visible;
+      white-space: nowrap;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      line-height: 1.1;
+      transform-origin: center center;
+    }
+
+    .label-text.mirror {
+      margin-bottom: 1.5em;
+    }
+
+    /* Предварительный просмотр */
+    body.preview-mode {
+      background: #777;
+    }
+
+    body.preview-mode .content {
+      display: none;
+    }
+
+    #previewToolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+      background: #333;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+    }
+
+    body:not(.preview-mode) #previewToolbar {
+      display: none;
+    }
+
+    #previewToolbar button {
+      margin: 0;
+      color: #000;
+      background: #fff;
+    }
+
+    .preview-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .preview-pages {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .preview-info {
+      position: sticky;
+      top: 65px;
+      flex: 0 0 280px;
+      width: 280px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgb(0 0 0 / 50%);
+    }
+
+    .preview-info h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .preview-info dl {
+      margin: 0;
+    }
+
+    .preview-info dt {
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .preview-info dd {
+      margin: 3px 0 10px;
+    }
+
+    /* Один лист A4 */
+    .print-page {
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto 20px;
+      padding: 10mm;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 0 8px rgb(0 0 0 / 50%);
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .print-page .table1 {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+      html,
+      body {
+        width: 210mm;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      #previewContainer,
+      #previewContainer * {
+        visibility: visible;
+      }
+
+      #previewContainer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block !important;
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+      }
+
+      .preview-layout {
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+
+      .preview-pages {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+      }
+
+      .preview-info,
+      #previewToolbar,
+      .content,
+      #tableContainer {
+        display: none !important;
+      }
+
+      .print-page {
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 10mm;
+        overflow: hidden;
+        box-shadow: none;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .print-page:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <div class="textarea-container">
+      <textarea
+        id="inputText"
+        rows="22"
+        cols="50"
+        style="overflow-y: scroll;"
+        placeholder="Введите данные: каждая строка — отдельная наклейка"
+      ></textarea>
+
+      <div class="settings">
+        <div class="slider-container">
+          <label for="fontSize">Высота шрифта:</label>
+          <input type="range" id="fontSize" class="slider" min="1" max="30" step="0.5" value="16">
+          <input type="number" id="fontSizeValue" class="value-display" min="1" max="30" step="0.5" value="16">
+        </div>
+
+        <div class="slider-container">
+          <label for="firstRowMargin">Отступ первой строки от верха листа:</label>
+          <input type="range" id="firstRowMargin" class="slider" min="0" max="100" value="40">
+          <input type="number" id="firstRowMarginValue" class="value-display" min="0" max="100" value="40">
+        </div>
+
+        <div class="slider-container">
+          <label for="rowSpacing">Отступ после первой строки:</label>
+          <input type="range" id="rowSpacing" class="slider" min="0" max="50" value="15">
+          <input type="number" id="rowSpacingValue" class="value-display" min="0" max="50" value="15">
+        </div>
+
+        <div class="slider-container">
+          <label for="textMargin">Отступ текста 2 и последующих строк:</label>
+          <input type="range" id="textMargin" class="slider" min="0" max="100" value="52">
+          <input type="number" id="textMarginValue" class="value-display" min="0" max="100" value="52">
+        </div>
+
+        <div class="slider-container">
+          <label for="columnCount">Количество столбцов:</label>
+          <input type="range" id="columnCount" class="slider" min="1" max="10" value="7">
+          <input type="number" id="columnCountValue" class="value-display" min="1" max="10" value="7">
+        </div>
+
+        <div class="slider-container">
+          <label for="duplicateCount">Количество дубликатов:</label>
+          <input type="range" id="duplicateCount" class="slider" min="1" max="50" value="1">
+          <input type="number" id="duplicateCountValue" class="value-display" min="1" max="50" value="1">
+        </div>
+
+        <div class="slider-container">
+          <label for="rowsPerPage">Количество строк на листе:</label>
+          <input type="range" id="rowsPerPage" class="slider" min="1" max="20" value="8">
+          <input type="number" id="rowsPerPageValue" class="value-display" min="1" max="20" value="8">
+        </div>
+
+        <div>
+          <label for="disableBorders">Выключить границы:</label>
+          <input type="checkbox" id="disableBorders">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" onclick="generateTable()">Generate Table</button>
+    <button type="button" onclick="createPreview()">Предварительный просмотр</button>
+
+    <div id="tableContainer"></div>
+  </div>
+
+  <div id="previewToolbar">
+    <button type="button" id="printBtn">Печать</button>
+    <button type="button" id="closePreviewBtn">Закрыть просмотр</button>
+  </div>
+
+  <div id="previewContainer" style="display: none;">
+    <div class="preview-layout">
+      <div class="preview-pages" id="previewPages"></div>
+
+      <div class="preview-info">
+        <h3>Размеры</h3>
+
+        <dl>
+          <dt>Размер страницы:</dt>
+          <dd>210 × 297 мм (A4)</dd>
+
+          <dt>Рабочая область листа:</dt>
+          <dd id="infoWorkArea">—</dd>
+
+          <dt>Отступ от верха до первой строки:</dt>
+          <dd id="infoFirstRowMargin">—</dd>
+
+          <dt>Отступ между строками:</dt>
+          <dd id="infoRowSpacing">—</dd>
+
+          <dt>Размер одной наклейки:</dt>
+          <dd id="infoLabelSize">—</dd>
+
+          <dt>Строк на листе:</dt>
+          <dd id="infoRowsPerPage">—</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PAGE_WIDTH_MM = 210;
+    const PAGE_HEIGHT_MM = 297;
+    const PAGE_PADDING_MM = 10;
+    const PX_PER_MM = 3.7795275591;
+    const FONT_FAMILY = "Arial, sans-serif";
+
+    let generatedRows = [];
+
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      const valueField = document.getElementById(slider.id + "Value");
+
+      slider.addEventListener("input", () => {
+        valueField.value = slider.value;
+      });
+
+      valueField.addEventListener("input", () => {
+        let value = parseFloat(valueField.value);
+
+        if (Number.isNaN(value)) {
+          value = parseFloat(slider.min);
+        }
+
+        value = Math.max(
+          parseFloat(slider.min),
+          Math.min(parseFloat(slider.max), value)
+        );
+
+        slider.value = value;
+        valueField.value = value;
+      });
+    });
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function pxToMm(px) {
+      return (Number(px) / PX_PER_MM).toFixed(1);
+    }
+
+    function getSettings() {
+      return {
+        inputText: document.getElementById("inputText").value,
+        fontSize: parseFloat(document.getElementById("fontSize").value) || 16,
+        firstRowMargin: parseFloat(document.getElementById("firstRowMargin").value) || 0,
+        rowSpacing: parseFloat(document.getElementById("rowSpacing").value) || 0,
+        textMargin: parseFloat(document.getElementById("textMargin").value) || 0,
+        columnCount: parseInt(document.getElementById("columnCount").value, 10) || 1,
+        duplicateCount: parseInt(document.getElementById("duplicateCount").value, 10) || 1,
+        rowsPerPage: parseInt(document.getElementById("rowsPerPage").value, 10) || 1,
+        disableBorders: document.getElementById("disableBorders").checked
+      };
+    }
+
+    function buildDuplicatedLines(inputText, duplicateCount) {
+      const sourceLines = inputText
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line !== "");
+
+      const result = [];
+
+      sourceLines.forEach(line => {
+        for (let copyIndex = 0; copyIndex < duplicateCount; copyIndex++) {
+          result.push(line);
+        }
+      });
+
+      return result;
+    }
+
+    function buildRows(settings) {
+      const lines = buildDuplicatedLines(
+        settings.inputText,
+        settings.duplicateCount
+      );
+
+      const rows = [];
+
+      for (let index = 0; index < lines.length; index += settings.columnCount) {
+        rows.push(lines.slice(index, index + settings.columnCount));
+      }
+
+      return rows;
+    }
+
+    function calculateScaleX(text, fontSize, availableWidthPx) {
+      const safeArea = Math.max(1, availableWidthPx - 8);
+
+      const measure = document.createElement("span");
+
+      measure.textContent = text;
+      measure.style.position = "absolute";
+      measure.style.left = "-100000px";
+      measure.style.top = "-100000px";
+      measure.style.visibility = "hidden";
+      measure.style.display = "inline-block";
+      measure.style.whiteSpace = "nowrap";
+      measure.style.fontFamily = FONT_FAMILY;
+      measure.style.fontWeight = "bold";
+      measure.style.fontSize = `${fontSize}px`;
+
+      document.body.appendChild(measure);
+
+      const measuredWidth = measure.getBoundingClientRect().width;
+
+      document.body.removeChild(measure);
+
+      if (measuredWidth <= safeArea) {
+        return 1;
+      }
+
+      return Math.max(0.1, safeArea / measuredWidth);
+    }
+
+    function createCell(text, marginTop, settings, cellWidthMm) {
+      const cellWidthPx = cellWidthMm * PX_PER_MM;
+      const textScaleX = calculateScaleX(
+        text,
+        settings.fontSize,
+        cellWidthPx
+      );
+
+      const borderStyle = settings.disableBorders ? "none" : "dashed";
+      const safeText = escapeHtml(text);
+
+      return `
+        <td class="td1"
+            style="
+              width: ${cellWidthMm}mm;
+              height: auto;
+              padding-top: ${marginTop}px;
+              padding-bottom: ${settings.rowSpacing}px;
+              border-style: ${borderStyle};
+            ">
+          <div class="label-text"
+               style="
+                 font-size: ${settings.fontSize}px;
+                 transform: scaleX(${textScaleX});
+               ">
+            ${safeText}
+          </div>
+
+          <div class="label-text mirror"
+               style="
+                 font-size: ${settings.fontSize}px;
+                 transform: scale(-${textScaleX}, -1);
+               ">
+            ${safeText}
+          </div>
+        </td>
+      `;
+    }
+
+    function buildTableHtml(rows, settings, usePageMargins, tableWidthMm) {
+      const cellWidthMm = tableWidthMm / settings.columnCount;
+
+      let html = `
+        <table class="table1"
+               border="${settings.disableBorders ? "0" : "1"}"
+               cellspacing="0"
+               cellpadding="1"
+               style="
+                 width: ${tableWidthMm}mm;
+                 table-layout: fixed;
+               ">
+      `;
+
+      rows.forEach((row, rowIndex) => {
+        const marginTop = usePageMargins
+          ? (rowIndex === 0 ? settings.firstRowMargin : settings.textMargin)
+          : (rowIndex % 8 === 0 ? settings.firstRowMargin : settings.textMargin);
+
+        html += "<tr>";
+
+        for (let columnIndex = 0; columnIndex < settings.columnCount; columnIndex++) {
+          const text = row[columnIndex] ?? "";
+          html += createCell(text, marginTop, settings, cellWidthMm);
+        }
+
+        html += "</tr>";
+      });
+
+      html += "</table>";
+
+      return html;
+    }
+
+    function generateTable() {
+      const settings = getSettings();
+
+      generatedRows = buildRows(settings);
+
+      if (generatedRows.length === 0) {
+        document.getElementById("tableContainer").innerHTML = "";
+        return;
+      }
+
+      /* Обычная таблица: ширина 1654 px */
+      const ordinaryTableWidthMm = 1654 / PX_PER_MM;
+
+      document.getElementById("tableContainer").innerHTML =
+        buildTableHtml(
+          generatedRows,
+          settings,
+          false,
+          ordinaryTableWidthMm
+        );
+
+      if (document.body.classList.contains("preview-mode")) {
+        closePreview();
+      }
+    }
+
+    function createPreview() {
+      const settings = getSettings();
+
+      generatedRows = buildRows(settings);
+
+      if (generatedRows.length === 0) {
+        alert("Введите хотя бы одну строку текста.");
+        return;
+      }
+
+      const printableWidthMm = PAGE_WIDTH_MM - PAGE_PADDING_MM * 2;
+      const printableHeightMm = PAGE_HEIGHT_MM - PAGE_PADDING_MM * 2;
+      const labelWidthMm = printableWidthMm / settings.columnCount;
+
+      const previewPages = document.getElementById("previewPages");
+      previewPages.innerHTML = "";
+
+      for (
+        let startRow = 0;
+        startRow < generatedRows.length;
+        startRow += settings.rowsPerPage
+      ) {
+        const pageRows = generatedRows.slice(
+          startRow,
+          startRow + settings.rowsPerPage
+        );
+
+        const page = document.createElement("div");
+        page.className = "print-page";
+
+        page.innerHTML = buildTableHtml(
+          pageRows,
+          settings,
+          true,
+          printableWidthMm
+        );
+
+        previewPages.appendChild(page);
+      }
+
+      document.getElementById("infoWorkArea").textContent =
+        `${printableWidthMm.toFixed(0)} × ${printableHeightMm.toFixed(0)} мм`;
+
+      document.getElementById("infoFirstRowMargin").textContent =
+        `${pxToMm(settings.firstRowMargin)} мм`;
+
+      document.getElementById("infoRowSpacing").textContent =
+        `${pxToMm(settings.rowSpacing)} мм`;
+
+      document.getElementById("infoLabelSize").textContent =
+        `${labelWidthMm.toFixed(1)} мм × зависит от настроек строки`;
+
+      document.getElementById("infoRowsPerPage").textContent =
+        settings.rowsPerPage;
+
+      document.getElementById("previewContainer").style.display = "block";
+      document.body.classList.add("preview-mode");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function closePreview() {
+      document.body.classList.remove("preview-mode");
+      document.getElementById("previewContainer").style.display = "none";
+    }
+
+    document.getElementById("printBtn").addEventListener("click", () => {
+      window.print();
+    });
+
+    document.getElementById("closePreviewBtn").addEventListener("click", () => {
+      closePreview();
+    });
+  </script>
+</body>
+</html>

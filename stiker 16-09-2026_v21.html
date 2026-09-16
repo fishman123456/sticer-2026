@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Многостраничная таблица А4</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: #e5e5e5;
+            color: #222;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Основной контейнер */
+        .application {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        /* Панель настроек */
+        .settings-panel {
+            width: 390px;
+            flex: 0 0 390px;
+            padding: 20px;
+
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
+        }
+
+        .settings-panel h2 {
+            margin: 0 0 20px;
+            font-size: 22px;
+        }
+
+        .text-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        #textInput {
+            display: block;
+            width: 100%;
+            min-height: 150px;
+            margin-bottom: 22px;
+            padding: 10px;
+
+            resize: vertical;
+
+            border: 1px solid #bdbdbd;
+            border-radius: 6px;
+
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        #textInput:focus,
+        .slider-value:focus {
+            outline: 2px solid #4d90fe;
+            outline-offset: 1px;
+        }
+
+        /* Группа параметра */
+        .slider-group {
+            margin-bottom: 17px;
+        }
+
+        .slider-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 7px;
+        }
+
+        .slider-title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .slider-value {
+            width: 82px;
+            padding: 5px 7px;
+
+            border: 1px solid #bdbdbd;
+            border-radius: 5px;
+
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .slider {
+            display: block;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* Кнопка печати */
+        .print-button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 10px;
+
+            border: 0;
+            border-radius: 6px;
+
+            background: #2f75b5;
+            color: #ffffff;
+
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .print-button:hover {
+            background: #245d91;
+        }
+
+        /* Чекбокс печати границ */
+        .print-border-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            margin-top: 12px;
+
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .print-border-option input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+
+            cursor: pointer;
+        }
+
+        /* Информация о размерах ячеек */
+        .cell-size-info {
+            margin-top: 14px;
+            padding: 10px;
+
+            border: 1px solid #cfcfcf;
+            border-radius: 6px;
+
+            background: #f5f5f5;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .cell-size-info div {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Счётчик страниц */
+        .page-count-info {
+            margin-top: 10px;
+            color: #555;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Контейнер всех страниц */
+        .pages-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /*
+         * Один лист А4.
+         */
+        .a4-page {
+            position: relative;
+
+            width: 210mm;
+            height: 297mm;
+            min-width: 210mm;
+            min-height: 297mm;
+
+            background: #ffffff;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+
+            overflow: hidden;
+        }
+
+        /*
+         * Пунктирная граница области отступов.
+         */
+        .margin-border {
+            position: absolute;
+
+            top: 12.5mm;
+            left: 10mm;
+            right: 5mm;
+            bottom: 10mm;
+
+            border: 1px dashed #777;
+
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /*
+         * Таблица одной страницы.
+         */
+        .text-table {
+            position: absolute;
+
+            top: 12.5mm;
+            left: 10mm;
+            right: 5mm;
+            bottom: 10mm;
+
+            display: grid;
+
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-rows: repeat(7, minmax(0, 1fr));
+
+            column-gap: 2.5mm;
+            row-gap: 2.5mm;
+
+            overflow: hidden;
+        }
+
+        /*
+         * Одна ячейка.
+         */
+        .table-cell {
+            position: relative;
+
+            display: flex;
+            flex-direction: column;
+
+            align-items: stretch;
+            justify-content: flex-start;
+
+            min-width: 0;
+            min-height: 0;
+
+            padding: 0;
+
+            border: 1px dashed #222;
+            background: #ffffff;
+
+            overflow: hidden;
+        }
+
+        /*
+         * Обычный и зеркальный текст.
+         */
+        .normal-text,
+        .mirrored-text {
+            display: block;
+
+            width: 100%;
+            margin: 0;
+            padding: 0;
+
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /*
+         * Обычный текст.
+         */
+        .normal-text {
+            flex: 0 0 auto;
+            font-size: 16px;
+        }
+
+        /*
+         * Зеркальный текст непосредственно под обычным.
+         */
+        .mirrored-text {
+            flex: 0 0 auto;
+            font-size: 16px;
+
+            transform: scaleY(-1);
+            transform-origin: center center;
+        }
+
+        /*
+         * Подпись размеров ячейки.
+         */
+        .cell-size-label {
+            position: absolute;
+            right: 2mm;
+            bottom: 1mm;
+
+            color: #777;
+            font-size: 7px;
+            line-height: 1;
+
+            pointer-events: none;
+        }
+
+        /*
+         * Номер страницы.
+         */
+        .page-number {
+            position: absolute;
+            right: 5mm;
+            bottom: 3mm;
+
+            color: #777;
+            font-size: 8px;
+        }
+
+        /*
+         * Печатные стили.
+         */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            html,
+            body {
+                width: 210mm;
+                min-height: 297mm;
+                background: #ffffff;
+            }
+
+            .application {
+                display: block;
+                padding: 0;
+            }
+
+            .settings-panel {
+                display: none;
+            }
+
+            .pages-container {
+                display: block;
+            }
+
+            .a4-page {
+                width: 210mm;
+                height: 297mm;
+                min-width: 210mm;
+                min-height: 297mm;
+
+                margin: 0;
+                box-shadow: none;
+
+                break-after: page;
+                page-break-after: always;
+            }
+
+            .a4-page:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+
+            /*
+             * Вспомогательная рамка не печатается.
+             */
+            .margin-border {
+                display: none;
+            }
+
+            /*
+             * Подписи размеров ячеек не печатаются.
+             */
+            .cell-size-label,
+            .page-number {
+                display: none;
+            }
+
+            /*
+             * Если чекбокс выключен,
+             * границы ячеек не печатаются.
+             */
+            body.hide-cell-borders .table-cell {
+                border-color: transparent !important;
+            }
+        }
+
+        /*
+         * Отображение на небольших экранах.
+         */
+        @media screen and (max-width: 950px) {
+            .application {
+                flex-direction: column;
+            }
+
+            .settings-panel {
+                width: 100%;
+                flex-basis: auto;
+            }
+
+            .pages-container {
+                width: 100%;
+                align-items: flex-start;
+            }
+
+            .a4-page {
+                transform: scale(0.7);
+                transform-origin: top left;
+
+                margin-right: -63mm;
+                margin-bottom: -89mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="application">
+
+        <!-- Панель управления -->
+        <aside class="settings-panel">
+
+            <h2>Настройки таблицы</h2>
+
+            <label class="text-label" for="textInput">
+                Текст ячеек
+            </label>
+
+            <textarea
+                id="textInput"
+                placeholder="Каждая новая строка станет отдельной ячейкой..."
+            ></textarea>
+
+            <!-- Отступ слева -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="leftMargin">
+                        Отступ слева, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="leftMarginValue"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value="10"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="leftMargin"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value="10"
+                >
+            </div>
+
+            <!-- Отступ справа -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="rightMargin">
+                        Отступ справа, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="rightMarginValue"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value="5"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="rightMargin"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value="5"
+                >
+            </div>
+
+            <!-- Отступ сверху -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="topMargin">
+                        Отступ сверху, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="topMarginValue"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value="12.5"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="topMargin"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value="12.5"
+                >
+            </div>
+
+            <!-- Отступ снизу -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="bottomMargin">
+                        Отступ снизу, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="bottomMarginValue"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value="10"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="bottomMargin"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value="10"
+                >
+            </div>
+
+            <!-- Размер шрифта -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="fontSize">
+                        Размер шрифта, px
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="fontSizeValue"
+                        type="number"
+                        min="8"
+                        max="72"
+                        step="1"
+                        value="16"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="fontSize"
+                    type="range"
+                    min="8"
+                    max="72"
+                    step="1"
+                    value="16"
+                >
+            </div>
+
+            <!-- Количество столбцов -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="columnCount">
+                        Количество столбцов
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="columnCountValue"
+                        type="number"
+                        min="1"
+                        max="20"
+                        step="1"
+                        value="7"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="columnCount"
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value="7"
+                >
+            </div>
+
+            <!-- Количество строк -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="rowCount">
+                        Количество строк
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="rowCountValue"
+                        type="number"
+                        min="1"
+                        max="30"
+                        step="1"
+                        value="7"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="rowCount"
+                    type="range"
+                    min="1"
+                    max="30"
+                    step="1"
+                    value="7"
+                >
+            </div>
+
+            <!-- Расстояние между столбцами -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="columnGap">
+                        Между столбцами, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="columnGapValue"
+                        type="number"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        value="2.5"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="columnGap"
+                    type="range"
+                    min="0"
+                    max="30"
+                    step="0.1"
+                    value="2.5"
+                >
+            </div>
+
+            <!-- Расстояние между строками -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="rowGap">
+                        Между строками, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="rowGapValue"
+                        type="number"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        value="2.5"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="rowGap"
+                    type="range"
+                    min="0"
+                    max="30"
+                    step="0.1"
+                    value="2.5"
+                >
+            </div>
+
+            <!-- Ширина ячейки -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="cellWidth">
+                        Ширина ячейки, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="cellWidthValue"
+                        type="number"
+                        min="1"
+                        max="100"
+                        step="0.1"
+                        value="25"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="cellWidth"
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="0.1"
+                    value="25"
+                >
+            </div>
+
+            <!-- Высота ячейки -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label class="slider-title" for="cellHeight">
+                        Высота ячейки, мм
+                    </label>
+
+                    <input
+                        class="slider-value"
+                        id="cellHeightValue"
+                        type="number"
+                        min="1"
+                        max="100"
+                        step="0.1"
+                        value="25"
+                    >
+                </div>
+
+                <input
+                    class="slider"
+                    id="cellHeight"
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="0.1"
+                    value="25"
+                >
+            </div>
+
+            <!-- Кнопка печати -->
+            <button
+                class="print-button"
+                id="printButton"
+                type="button"
+            >
+                Печать
+            </button>
+
+            <!-- Чекбокс печати границ -->
+            <label class="print-border-option">
+                <input
+                    type="checkbox"
+                    id="printCellBorders"
+                    checked
+                >
+
+                <span>
+                    Печатать границы ячеек
+                </span>
+            </label>
+
+            <!-- Информация о размерах -->
+            <div class="cell-size-info">
+                <div>
+                    <span>Ширина ячейки:</span>
+                    <span id="cellWidthInfo">25 мм</span>
+                </div>
+
+                <div>
+                    <span>Высота ячейки:</span>
+                    <span id="cellHeightInfo">25 мм</span>
+                </div>
+            </div>
+
+            <!-- Количество страниц -->
+            <div
+                class="page-count-info"
+                id="pageCountInfo"
+            >
+                Страниц: 1
+            </div>
+
+        </aside>
+
+        <!-- Все страницы -->
+        <main
+            class="pages-container"
+            id="pagesContainer"
+        ></main>
+
+    </div>
+
+    <script>
+        "use strict";
+
+        /*
+         * Элементы страницы.
+         */
+        const textInput = document.getElementById("textInput");
+
+        const pagesContainer = document.getElementById(
+            "pagesContainer"
+        );
+
+        const cellWidthInfo = document.getElementById(
+            "cellWidthInfo"
+        );
+
+        const cellHeightInfo = document.getElementById(
+            "cellHeightInfo"
+        );
+
+        const pageCountInfo = document.getElementById(
+            "pageCountInfo"
+        );
+
+        const printCellBorders = document.getElementById(
+            "printCellBorders"
+        );
+
+        /*
+         * Получение строк текста.
+         * Одна строка = одна ячейка.
+         */
+        function getInputLines() {
+            const text = textInput.value;
+
+            if (text.length === 0) {
+                return ["Введите текст..."];
+            }
+
+            return text.split(/\r?\n/);
+        }
+
+        /*
+         * Округление до одной десятичной доли.
+         */
+        function roundNumber(value) {
+            return Math.round(value * 10) / 10;
+        }
+
+        /*
+         * Ограничение значения диапазоном.
+         */
+        function clamp(value, min, max) {
+            value = Number(value);
+
+            if (Number.isNaN(value)) {
+                return min;
+            }
+
+            return roundNumber(
+                Math.min(
+                    Math.max(value, min),
+                    max
+                )
+            );
+        }
+
+        /*
+         * Создаёт одну ячейку.
+         */
+        function createCell(
+            text,
+            fontSize,
+            cellWidth,
+            cellHeight
+        ) {
+            const cell = document.createElement("div");
+
+            cell.className = "table-cell";
+
+            /*
+             * Обычный текст.
+             */
+            const normalText = document.createElement("div");
+
+            normalText.className = "normal-text";
+            normalText.textContent = text;
+            normalText.style.fontSize = `${fontSize}px`;
+
+            /*
+             * Зеркальный текст.
+             */
+            const mirroredText = document.createElement("div");
+
+            mirroredText.className = "mirrored-text";
+            mirroredText.textContent = text;
+            mirroredText.style.fontSize = `${fontSize}px`;
+
+            /*
+             * Подпись размера ячейки.
+             */
+            const sizeLabel = document.createElement("div");
+
+            sizeLabel.className = "cell-size-label";
+            sizeLabel.textContent =
+                `${cellWidth} × ${cellHeight} мм`;
+
+            cell.appendChild(normalText);
+            cell.appendChild(mirroredText);
+            cell.appendChild(sizeLabel);
+
+            return cell;
+        }
+
+        /*
+         * Создаёт одну страницу А4.
+         */
+        function createPage(
+            pageLines,
+            pageNumber,
+            totalPages,
+            settings
+        ) {
+            const page = document.createElement("section");
+
+            page.className = "a4-page";
+
+            /*
+             * Пунктирная рамка области отступов.
+             */
+            const marginBorder = document.createElement("div");
+
+            marginBorder.className = "margin-border";
+
+            marginBorder.style.top =
+                `${settings.topMargin}mm`;
+
+            marginBorder.style.left =
+                `${settings.leftMargin}mm`;
+
+            marginBorder.style.right =
+                `${settings.rightMargin}mm`;
+
+            marginBorder.style.bottom =
+                `${settings.bottomMargin}mm`;
+
+            /*
+             * Таблица страницы.
+             */
+            const table = document.createElement("div");
+
+            table.className = "text-table";
+
+            table.style.top =
+                `${settings.topMargin}mm`;
+
+            table.style.left =
+                `${settings.leftMargin}mm`;
+
+            table.style.right =
+                `${settings.rightMargin}mm`;
+
+            table.style.bottom =
+                `${settings.bottomMargin}mm`;
+
+            table.style.gridTemplateColumns =
+                `repeat(${settings.columnCount}, minmax(0, 1fr))`;
+
+            table.style.gridTemplateRows =
+                `repeat(${settings.rowCount}, minmax(0, 1fr))`;
+
+            table.style.columnGap =
+                `${settings.columnGap}mm`;
+
+            table.style.rowGap =
+                `${settings.rowGap}mm`;
+
+            /*
+             * Добавляем ячейки страницы.
+             */
+            const cellsPerPage =
+                settings.columnCount *
+                settings.rowCount;
+
+            for (let index = 0; index < cellsPerPage; index++) {
+                const text = pageLines[index] || "";
+
+                const cell = createCell(
+                    text,
+                    settings.fontSize,
+                    settings.cellWidth,
+                    settings.cellHeight
+                );
+
+                table.appendChild(cell);
+            }
+
+            /*
+             * Номер страницы.
+             */
+            const pageNumberElement =
+                document.createElement("div");
+
+            pageNumberElement.className = "page-number";
+            pageNumberElement.textContent =
+                `Страница ${pageNumber} из ${totalPages}`;
+
+            page.appendChild(marginBorder);
+            page.appendChild(table);
+            page.appendChild(pageNumberElement);
+
+            return page;
+        }
+
+        /*
+         * Считывает настройки из панели.
+         */
+        function getSettings() {
+            return {
+                leftMargin: Number(
+                    document.getElementById("leftMargin").value
+                ),
+
+                rightMargin: Number(
+                    document.getElementById("rightMargin").value
+                ),
+
+                topMargin: Number(
+                    document.getElementById("topMargin").value
+                ),
+
+                bottomMargin: Number(
+                    document.getElementById("bottomMargin").value
+                ),
+
+                fontSize: Number(
+                    document.getElementById("fontSize").value
+                ),
+
+                columnCount: Number(
+                    document.getElementById("columnCount").value
+                ),
+
+                rowCount: Number(
+                    document.getElementById("rowCount").value
+                ),
+
+                columnGap: Number(
+                    document.getElementById("columnGap").value
+                ),
+
+                rowGap: Number(
+                    document.getElementById("rowGap").value
+                ),
+
+                cellWidth: Number(
+                    document.getElementById("cellWidth").value
+                ),
+
+                cellHeight: Number(
+                    document.getElementById("cellHeight").value
+                )
+            };
+        }
+
+        /*
+         * Создаёт все необходимые страницы.
+         */
+        function updatePages() {
+            const lines = getInputLines();
+            const settings = getSettings();
+
+            const cellsPerPage =
+                settings.columnCount *
+                settings.rowCount;
+
+            const totalPages = Math.max(
+                1,
+                Math.ceil(lines.length / cellsPerPage)
+            );
+
+            pagesContainer.innerHTML = "";
+
+            for (
+                let pageIndex = 0;
+                pageIndex < totalPages;
+                pageIndex++
+            ) {
+                const startIndex =
+                    pageIndex * cellsPerPage;
+
+                const pageLines = lines.slice(
+                    startIndex,
+                    startIndex + cellsPerPage
+                );
+
+                const page = createPage(
+                    pageLines,
+                    pageIndex + 1,
+                    totalPages,
+                    settings
+                );
+
+                pagesContainer.appendChild(page);
+            }
+
+            cellWidthInfo.textContent =
+                `${settings.cellWidth} мм`;
+
+            cellHeightInfo.textContent =
+                `${settings.cellHeight} мм`;
+
+            pageCountInfo.textContent =
+                `Страниц: ${totalPages}`;
+        }
+
+        /*
+         * Подключение слайдера к числовому полю.
+         */
+        function connectSlider(
+            sliderId,
+            numberId,
+            updateFunction
+        ) {
+            const slider =
+                document.getElementById(sliderId);
+
+            const numberInput =
+                document.getElementById(numberId);
+
+            function updateFromSlider() {
+                const value = roundNumber(
+                    Number(slider.value)
+                );
+
+                numberInput.value = value;
+                updateFunction();
+            }
+
+            function updateFromNumber() {
+                const value = clamp(
+                    numberInput.value,
+                    Number(slider.min),
+                    Number(slider.max)
+                );
+
+                slider.value = value;
+                numberInput.value = value;
+
+                updateFunction();
+            }
+
+            slider.addEventListener(
+                "input",
+                updateFromSlider
+            );
+
+            numberInput.addEventListener(
+                "input",
+                updateFromNumber
+            );
+
+            numberInput.addEventListener(
+                "change",
+                updateFromNumber
+            );
+
+            updateFromSlider();
+        }
+
+        /*
+         * Управление печатью границ.
+         */
+        function updatePrintBorderMode() {
+            document.body.classList.toggle(
+                "hide-cell-borders",
+                !printCellBorders.checked
+            );
+        }
+
+        /*
+         * Ввод текста.
+         */
+        textInput.addEventListener(
+            "input",
+            updatePages
+        );
+
+        /*
+         * Все параметры перестраивают страницы.
+         */
+        const controls = [
+            ["leftMargin", "leftMarginValue"],
+            ["rightMargin", "rightMarginValue"],
+            ["topMargin", "topMarginValue"],
+            ["bottomMargin", "bottomMarginValue"],
+            ["fontSize", "fontSizeValue"],
+            ["columnCount", "columnCountValue"],
+            ["rowCount", "rowCountValue"],
+            ["columnGap", "columnGapValue"],
+            ["rowGap", "rowGapValue"],
+            ["cellWidth", "cellWidthValue"],
+            ["cellHeight", "cellHeightValue"]
+        ];
+
+        controls.forEach(control => {
+            connectSlider(
+                control[0],
+                control[1],
+                updatePages
+            );
+        });
+
+        /*
+         * Изменение чекбокса печати границ.
+         */
+        printCellBorders.addEventListener(
+            "change",
+            updatePrintBorderMode
+        );
+
+        /*
+         * Печать.
+         */
+        document
+            .getElementById("printButton")
+            .addEventListener(
+                "click",
+                () => {
+                    updatePrintBorderMode();
+                    window.print();
+                }
+            );
+
+        /*
+         * Начальная настройка.
+         */
+        updatePrintBorderMode();
+        updatePages();
+    </script>
+
+</body>
+
+</html>

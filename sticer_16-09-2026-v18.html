@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор наклеек на провода</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 8px;
+        }
+
+        .content {
+            width: 1654px;
+            min-height: 2339px;
+            margin: auto;
+            background: #fff;
+        }
+
+        .textarea-container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .settings {
+            margin-left: 20px;
+        }
+
+            .settings label,
+            .settings input {
+                display: inline-block;
+                vertical-align: middle;
+            }
+
+            .settings label {
+                width: 300px;
+                margin-right: 10px;
+                text-align: left;
+            }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 30px;
+        }
+
+        .slider {
+            width: 200px;
+        }
+
+        .value-display {
+            width: 60px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 10px;
+            margin-right: 8px;
+            padding: 7px 14px;
+            cursor: pointer;
+        }
+
+        #tableContainer {
+            width: 100%;
+        }
+
+        .table1 {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        .td1 {
+            position: relative;
+            overflow: hidden;
+            padding-left: 0;
+            padding-right: 0;
+            text-align: center;
+            vertical-align: top;
+            border: none !important;
+        }
+
+            .td1::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                border: 1px dashed #000;
+            }
+
+            .td1.empty-cell::before,
+            .td1.no-border::before {
+                display: none;
+            }
+
+        .column-gap {
+            padding: 0 !important;
+            border: none !important;
+            background: transparent;
+        }
+
+        .label-text {
+            position: relative;
+            left: 50%;
+            display: block;
+            width: max-content;
+            max-width: none;
+            margin-top: 0.1em;
+            margin-bottom: 0.1em;
+            overflow: visible;
+            white-space: nowrap;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            line-height: 1.1;
+            transform-origin: center center;
+        }
+
+            .label-text.mirror {
+                margin-bottom: 1.5em;
+            }
+
+        body.preview-mode {
+            background: #777;
+        }
+
+            body.preview-mode .content {
+                display: none;
+            }
+
+        #previewToolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #333;
+            box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+        }
+
+        body:not(.preview-mode) #previewToolbar {
+            display: none;
+        }
+
+        #previewToolbar button {
+            margin: 0;
+            color: #000;
+            background: #fff;
+        }
+
+        .preview-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .preview-pages {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .preview-info {
+            position: sticky;
+            top: 65px;
+            flex: 0 0 280px;
+            width: 280px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 0 8px rgb(0 0 0 / 50%);
+        }
+
+            .preview-info h3 {
+                margin-top: 0;
+                font-size: 16px;
+            }
+
+            .preview-info dl {
+                margin: 0;
+            }
+
+            .preview-info dt {
+                margin-top: 12px;
+                font-weight: bold;
+            }
+
+            .preview-info dd {
+                margin: 3px 0 10px;
+            }
+
+        .print-page {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 0 8px rgb(0 0 0 / 50%);
+            break-after: page;
+            page-break-after: always;
+        }
+
+            .print-page .table1 {
+                table-layout: fixed;
+            }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 210mm;
+                height: auto;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+            }
+
+                body * {
+                    visibility: hidden;
+                }
+
+            #previewContainer,
+            #previewContainer * {
+                visibility: visible;
+            }
+
+            #previewContainer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: block !important;
+                width: 210mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .preview-layout {
+                display: block;
+                width: 210mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .preview-pages {
+                width: 210mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .preview-info,
+            #previewToolbar,
+            .content,
+            #tableContainer {
+                display: none !important;
+            }
+
+            .print-page {
+                position: relative;
+                width: 210mm;
+                height: 297mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                box-shadow: none;
+                break-after: page;
+                page-break-after: always;
+            }
+
+                .print-page .table1 {
+                    position: absolute;
+                    top: var(--print-top-margin);
+                    left: var(--print-left-margin);
+                    width: var(--print-table-width);
+                    margin: 0;
+                    table-layout: fixed;
+                }
+
+                .print-page:last-child {
+                    break-after: auto;
+                    page-break-after: auto;
+                }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <div class="textarea-container">
+            <textarea id="inputText"
+                      rows="22"
+                      cols="50"
+                      style="overflow-y: scroll;"
+                      placeholder="Введите данные: каждая строка — отдельная наклейка"></textarea>
+
+            <div class="settings">
+                <div class="slider-container">
+                    <label for="fontSize">
+                        Высота шрифта:
+                    </label>
+
+                    <input type="range"
+                           id="fontSize"
+                           class="slider"
+                           min="1"
+                           max="30"
+                           step="0.5"
+                           value="16">
+
+                    <input type="number"
+                           id="fontSizeValue"
+                           class="value-display"
+                           min="1"
+                           max="30"
+                           step="0.5"
+                           value="16">
+                </div>
+
+                <div class="slider-container">
+                    <label for="firstRowMargin">
+                        Отступ первой строки от верха, мм:
+                    </label>
+
+                    <input type="range"
+                           id="firstRowMargin"
+                           class="slider"
+                           min="0"
+                           max="100"
+                           step="0.5"
+                           value="12.5">
+
+                    <input type="number"
+                           id="firstRowMarginValue"
+                           class="value-display"
+                           min="0"
+                           max="100"
+                           step="0.5"
+                           value="12.5">
+                </div>
+
+                <div class="slider-container">
+                    <label for="rowSpacing">
+                        Отступ после первой строки:
+                    </label>
+
+                    <input type="range"
+                           id="rowSpacing"
+                           class="slider"
+                           min="0"
+                           max="200"
+                           value="15">
+
+                    <input type="number"
+                           id="rowSpacingValue"
+                           class="value-display"
+                           min="0"
+                           max="200"
+                           value="15">
+                </div>
+
+                <div class="slider-container">
+                    <label for="textMargin">
+                        Отступ текста 2 и последующих строк:
+                    </label>
+
+                    <input type="range"
+                           id="textMargin"
+                           class="slider"
+                           min="0"
+                           max="100"
+                           value="0">
+
+                    <input type="number"
+                           id="textMarginValue"
+                           class="value-display"
+                           min="0"
+                           max="100"
+                           step="0.5"
+                           value="0">
+                </div>
+
+                <div class="slider-container">
+                    <label for="columnCount">
+                        Количество столбцов:
+                    </label>
+
+                    <input type="range"
+                           id="columnCount"
+                           class="slider"
+                           min="1"
+                           max="15"
+                           value="7">
+
+                    <input type="number"
+                           id="columnCountValue"
+                           class="value-display"
+                           min="1"
+                           max="15"
+                           value="7">
+                </div>
+
+                <div class="slider-container">
+                    <label for="duplicateCount">
+                        Количество дубликатов:
+                    </label>
+
+                    <input type="range"
+                           id="duplicateCount"
+                           class="slider"
+                           min="1"
+                           max="50"
+                           value="2">
+
+                    <input type="number"
+                           id="duplicateCountValue"
+                           class="value-display"
+                           min="1"
+                           max="50"
+                           value="2">
+                </div>
+
+                <div class="slider-container">
+                    <label for="rowsPerPage">
+                        Количество строк на листе:
+                    </label>
+
+                    <input type="range"
+                           id="rowsPerPage"
+                           class="slider"
+                           min="1"
+                           max="20"
+                           value="7">
+
+                    <input type="number"
+                           id="rowsPerPageValue"
+                           class="value-display"
+                           min="1"
+                           max="20"
+                           value="7">
+                </div>
+
+                <div class="slider-container">
+                    <label for="leftPrintMargin">
+                        Левое поле печати, мм:
+                    </label>
+
+                    <input type="range"
+                           id="leftPrintMargin"
+                           class="slider"
+                           min="0"
+                           max="50"
+                           step="0.5"
+                           value="10">
+
+                    <input type="number"
+                           id="leftPrintMarginValue"
+                           class="value-display"
+                           min="0"
+                           max="50"
+                           step="0.5"
+                           value="10">
+                </div>
+
+                <div class="slider-container">
+                    <label for="rightPrintMargin">
+                        Правое поле печати, мм:
+                    </label>
+
+                    <input type="range"
+                           id="rightPrintMargin"
+                           class="slider"
+                           min="0"
+                           max="50"
+                           step="0.5"
+                           value="5">
+
+                    <input type="number"
+                           id="rightPrintMarginValue"
+                           class="value-display"
+                           min="0"
+                           max="50"
+                           step="0.5"
+                           value="5">
+                </div>
+
+                <div>
+                    <label for="disableBorders">
+                        Выключить границы:
+                    </label>
+
+                    <input type="checkbox"
+                           id="disableBorders">
+                </div>
+            </div>
+        </div>
+
+        <button type="button"
+                onclick="generateTable()">
+            Generate Table
+        </button>
+
+        <button type="button"
+                onclick="createPreview()">
+            Предварительный просмотр
+        </button>
+
+        <div id="tableContainer"></div>
+    </div>
+
+    <div id="previewToolbar">
+        <button type="button"
+                id="printBtn">
+            Печать
+        </button>
+
+        <button type="button"
+                id="closePreviewBtn">
+            Закрыть просмотр
+        </button>
+    </div>
+
+    <div id="previewContainer"
+         style="display: none;">
+        <div class="preview-layout">
+            <div class="preview-pages"
+                 id="previewPages"></div>
+
+            <div class="preview-info">
+                <h3>Размеры</h3>
+
+                <dl>
+                    <dt>Размер страницы:</dt>
+                    <dd>210 × 297 мм (A4)</dd>
+
+                    <dt>Рабочая область листа:</dt>
+                    <dd id="infoWorkArea">—</dd>
+
+                    <dt>Левое поле:</dt>
+                    <dd id="infoLeftMargin">—</dd>
+
+                    <dt>Правое поле:</dt>
+                    <dd id="infoRightMargin">—</dd>
+
+                    <dt>Отступ сверху:</dt>
+                    <dd id="infoTopMargin">—</dd>
+
+                    <dt>Отступ между строками:</dt>
+                    <dd id="infoRowSpacing">—</dd>
+
+                    <dt>Ширина одной наклейки:</dt>
+                    <dd id="infoLabelSize">—</dd>
+
+                    <dt>Межстолбцовый зазор:</dt>
+                    <dd id="infoColumnGap">—</dd>
+
+                    <dt>Строк на листе:</dt>
+                    <dd id="infoRowsPerPage">—</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PAGE_WIDTH_MM = 210;
+        const PAGE_HEIGHT_MM = 297;
+
+        const PAGE_TOP_MM = 10;
+        const PAGE_BOTTOM_MM = 10;
+
+        const PX_PER_MM = 3.7795275591;
+        const FONT_FAMILY = "Arial, sans-serif";
+
+        /*
+          Постоянный зазор между столбцами.
+        */
+        const COLUMN_GAP_MM = 2.5;
+
+        let generatedRows = [];
+
+        /*
+          Синхронизация слайдеров
+          и числовых полей.
+        */
+        document
+            .querySelectorAll('input[type="range"]')
+            .forEach(slider => {
+                const valueField =
+                    document.getElementById(
+                        slider.id + "Value"
+                    );
+
+                slider.addEventListener(
+                    "input",
+                    () => {
+                        valueField.value =
+                            slider.value;
+                    }
+                );
+
+                valueField.addEventListener(
+                    "input",
+                    () => {
+                        let value =
+                            parseFloat(
+                                valueField.value
+                            );
+
+                        if (
+                            Number.isNaN(value)
+                        ) {
+                            value =
+                                parseFloat(
+                                    slider.min
+                                );
+                        }
+
+                        value = Math.max(
+                            parseFloat(
+                                slider.min
+                            ),
+                            Math.min(
+                                parseFloat(
+                                    slider.max
+                                ),
+                                value
+                            )
+                        );
+
+                        slider.value = value;
+                        valueField.value = value;
+                    }
+                );
+            });
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
+        }
+
+        function getSettings() {
+            return {
+                inputText:
+                    document.getElementById(
+                        "inputText"
+                    ).value,
+
+                fontSize:
+                    parseFloat(
+                        document.getElementById(
+                            "fontSize"
+                        ).value
+                    ) || 16,
+
+                firstRowMargin:
+                    parseFloat(
+                        document.getElementById(
+                            "firstRowMargin"
+                        ).value
+                    ) || 0,
+
+                rowSpacing:
+                    parseFloat(
+                        document.getElementById(
+                            "rowSpacing"
+                        ).value
+                    ) || 0,
+
+                textMargin:
+                    parseFloat(
+                        document.getElementById(
+                            "textMargin"
+                        ).value
+                    ) || 0,
+
+                columnCount:
+                    parseInt(
+                        document.getElementById(
+                            "columnCount"
+                        ).value,
+                        10
+                    ) || 1,
+
+                duplicateCount:
+                    parseInt(
+                        document.getElementById(
+                            "duplicateCount"
+                        ).value,
+                        10
+                    ) || 1,
+
+                rowsPerPage:
+                    parseInt(
+                        document.getElementById(
+                            "rowsPerPage"
+                        ).value,
+                        10
+                    ) || 1,
+
+                leftPrintMargin:
+                    parseFloat(
+                        document.getElementById(
+                            "leftPrintMargin"
+                        ).value
+                    ) || 0,
+
+                rightPrintMargin:
+                    parseFloat(
+                        document.getElementById(
+                            "rightPrintMargin"
+                        ).value
+                    ) || 0,
+
+                disableBorders:
+                    document.getElementById(
+                        "disableBorders"
+                    ).checked
+            };
+        }
+
+        function buildDuplicatedLines(
+            inputText,
+            duplicateCount
+        ) {
+            const lines =
+                inputText
+                    .split(/\r?\n/)
+                    .map(line =>
+                        line.trim()
+                    )
+                    .filter(line =>
+                        line !== ""
+                    );
+
+            const result = [];
+
+            lines.forEach(line => {
+                for (
+                    let copyIndex = 0;
+                    copyIndex < duplicateCount;
+                    copyIndex++
+                ) {
+                    result.push(line);
+                }
+            });
+
+            return result;
+        }
+
+        function buildRows(settings) {
+            const allLines =
+                buildDuplicatedLines(
+                    settings.inputText,
+                    settings.duplicateCount
+                );
+
+            const rows = [];
+
+            for (
+                let lineIndex = 0;
+                lineIndex < allLines.length;
+                lineIndex += settings.columnCount
+            ) {
+                rows.push(
+                    allLines.slice(
+                        lineIndex,
+                        lineIndex +
+                        settings.columnCount
+                    )
+                );
+            }
+
+            return rows;
+        }
+
+        function calculateScaleX(
+            text,
+            fontSize,
+            availableWidthPx
+        ) {
+            const safeArea =
+                Math.max(
+                    1,
+                    availableWidthPx - 8
+                );
+
+            const measure =
+                document.createElement(
+                    "span"
+                );
+
+            measure.textContent =
+                text;
+
+            measure.style.position =
+                "absolute";
+
+            measure.style.left =
+                "-100000px";
+
+            measure.style.top =
+                "-100000px";
+
+            measure.style.visibility =
+                "hidden";
+
+            measure.style.display =
+                "inline-block";
+
+            measure.style.whiteSpace =
+                "nowrap";
+
+            measure.style.fontFamily =
+                FONT_FAMILY;
+
+            measure.style.fontWeight =
+                "bold";
+
+            measure.style.fontSize =
+                `${fontSize}px`;
+
+            document.body.appendChild(
+                measure
+            );
+
+            const textWidth =
+                measure
+                    .getBoundingClientRect()
+                    .width;
+
+            document.body.removeChild(
+                measure
+            );
+
+            if (
+                textWidth <= safeArea
+            ) {
+                return 1;
+            }
+
+            return Math.max(
+                0.1,
+                safeArea / textWidth
+            );
+        }
+
+        function createCell(
+            text,
+            marginTopMm,
+            settings,
+            cellWidthMm
+        ) {
+            const cellWidthPx =
+                cellWidthMm * PX_PER_MM;
+
+            const hasText =
+                String(text).trim() !== "";
+
+            const textScaleX =
+                calculateScaleX(
+                    text,
+                    settings.fontSize,
+                    cellWidthPx
+                );
+
+            const safeText =
+                escapeHtml(text);
+
+            const borderClass =
+                settings.disableBorders
+                    ? " no-border"
+                    : "";
+
+            return `
+            <td
+              class="td1${hasText
+                    ? ""
+                    : " empty-cell"
+                }${borderClass}"
+              style="
+                width: ${cellWidthMm}mm;
+                padding-top: ${marginTopMm}mm;
+                padding-bottom: ${settings.rowSpacing}px;
+              "
+            >
+              ${hasText
+                    ? `
+                    <div
+                      class="label-text"
+                      style="
+                        font-size:
+                          ${settings.fontSize}px;
+                        transform:
+                          translateX(-50%)
+                          scaleX(
+                            ${textScaleX}
+                          );
+                      "
+                    >
+                      ${safeText}
+                    </div>
+
+                    <div
+                      class="label-text mirror"
+                      style="
+                        font-size:
+                          ${settings.fontSize}px;
+                        transform:
+                          translateX(-50%)
+                          scale(
+                            -${textScaleX},
+                            -1
+                          );
+                      "
+                    >
+                      ${safeText}
+                    </div>
+                  `
+                    : ""
+                }
+            </td>
+          `;
+        }
+
+        function buildTableHtml(
+            rows,
+            settings,
+            usePageMargins,
+            tableWidthMm
+        ) {
+            const columnCount =
+                settings.columnCount;
+
+            const totalGapMm =
+                COLUMN_GAP_MM *
+                (columnCount - 1);
+
+            const cellWidthMm =
+                (
+                    tableWidthMm -
+                    totalGapMm
+                ) / columnCount;
+
+            let html = `
+            <table
+              class="table1"
+              cellspacing="0"
+              cellpadding="0"
+              style="
+                width: ${tableWidthMm}mm;
+                table-layout: fixed;
+              "
+            >
+              <colgroup>
+          `;
+
+            for (
+                let columnIndex = 0;
+                columnIndex < columnCount;
+                columnIndex++
+            ) {
+                html += `
+              <col
+                style="
+                  width:
+                    ${cellWidthMm}mm;
+                "
+              >
+            `;
+
+                if (
+                    columnIndex <
+                    columnCount - 1
+                ) {
+                    html += `
+                <col
+                  style="
+                    width:
+                      ${COLUMN_GAP_MM}mm;
+                  "
+                >
+              `;
+                }
+            }
+
+            html += `
+              </colgroup>
+          `;
+
+            rows.forEach(
+                (row, rowIndex) => {
+                    const marginTopMm =
+                        usePageMargins
+                            ? (
+                                rowIndex === 0
+                                    ? settings.firstRowMargin
+                                    : settings.textMargin
+                            )
+                            : (
+                                rowIndex === 0
+                                    ? settings.firstRowMargin
+                                    : settings.textMargin
+                            );
+
+                    html += "<tr>";
+
+                    for (
+                        let columnIndex = 0;
+                        columnIndex < columnCount;
+                        columnIndex++
+                    ) {
+                        const text =
+                            row[columnIndex] ?? "";
+
+                        html += createCell(
+                            text,
+                            marginTopMm,
+                            settings,
+                            cellWidthMm
+                        );
+
+                        if (
+                            columnIndex <
+                            columnCount - 1
+                        ) {
+                            html += `
+                    <td
+                      class="column-gap"
+                      style="
+                        width:
+                          ${COLUMN_GAP_MM}mm;
+                        padding: 0;
+                        border: none;
+                      "
+                    ></td>
+                  `;
+                        }
+                    }
+
+                    html += "</tr>";
+                }
+            );
+
+            html += "</table>";
+
+            return html;
+        }
+
+        function generateTable() {
+            const settings =
+                getSettings();
+
+            generatedRows =
+                buildRows(settings);
+
+            if (
+                generatedRows.length === 0
+            ) {
+                document.getElementById(
+                    "tableContainer"
+                ).innerHTML = "";
+
+                return;
+            }
+
+            const normalTableWidthMm =
+                1654 / PX_PER_MM;
+
+            document.getElementById(
+                "tableContainer"
+            ).innerHTML =
+                buildTableHtml(
+                    generatedRows,
+                    settings,
+                    false,
+                    normalTableWidthMm
+                );
+
+            if (
+                document.body.classList.contains(
+                    "preview-mode"
+                )
+            ) {
+                closePreview();
+            }
+        }
+
+        function createPreview() {
+            const settings =
+                getSettings();
+
+            generatedRows =
+                buildRows(settings);
+
+            if (
+                generatedRows.length === 0
+            ) {
+                alert(
+                    "Введите хотя бы одну строку текста."
+                );
+
+                return;
+            }
+
+            const tableWidthMm =
+                PAGE_WIDTH_MM -
+                settings.leftPrintMargin -
+                settings.rightPrintMargin;
+
+            const printableHeightMm =
+                PAGE_HEIGHT_MM -
+                PAGE_TOP_MM -
+                PAGE_BOTTOM_MM;
+
+            if (
+                tableWidthMm <= 0
+            ) {
+                alert(
+                    "Сумма левого и правого полей слишком большая."
+                );
+
+                return;
+            }
+
+            const totalGapMm =
+                COLUMN_GAP_MM *
+                (settings.columnCount - 1);
+
+            const labelWidthMm =
+                (
+                    tableWidthMm -
+                    totalGapMm
+                ) / settings.columnCount;
+
+            if (
+                labelWidthMm <= 0
+            ) {
+                alert(
+                    "При таком количестве столбцов ширина наклейки отрицательная."
+                );
+
+                return;
+            }
+
+            const previewPages =
+                document.getElementById(
+                    "previewPages"
+                );
+
+            previewPages.innerHTML = "";
+
+            for (
+                let startRow = 0;
+                startRow < generatedRows.length;
+                startRow += settings.rowsPerPage
+            ) {
+                const rowsForPage =
+                    generatedRows.slice(
+                        startRow,
+                        startRow +
+                        settings.rowsPerPage
+                    );
+
+                const page =
+                    document.createElement(
+                        "div"
+                    );
+
+                page.className =
+                    "print-page";
+
+                page.style.setProperty(
+                    "--print-left-margin",
+                    `${settings.leftPrintMargin}mm`
+                );
+
+                page.style.setProperty(
+                    "--print-table-width",
+                    `${tableWidthMm}mm`
+                );
+
+                page.style.setProperty(
+                    "--print-top-margin",
+                    `${PAGE_TOP_MM}mm`
+                );
+
+                page.innerHTML =
+                    buildTableHtml(
+                        rowsForPage,
+                        settings,
+                        true,
+                        tableWidthMm
+                    );
+
+                previewPages.appendChild(
+                    page
+                );
+            }
+
+            document.getElementById(
+                "infoWorkArea"
+            ).textContent =
+                `${tableWidthMm.toFixed(1)} × ${printableHeightMm.toFixed(1)
+                } мм`;
+
+            document.getElementById(
+                "infoLeftMargin"
+            ).textContent =
+                `${settings.leftPrintMargin.toFixed(1)} мм`;
+
+            document.getElementById(
+                "infoRightMargin"
+            ).textContent =
+                `${settings.rightPrintMargin.toFixed(1)} мм`;
+
+            document.getElementById(
+                "infoTopMargin"
+            ).textContent =
+                `${settings.firstRowMargin.toFixed(1)} мм`;
+
+            document.getElementById(
+                "infoRowSpacing"
+            ).textContent =
+                `${settings.rowSpacing.toFixed(1)} px`;
+
+            document.getElementById(
+                "infoLabelSize"
+            ).textContent =
+                `${labelWidthMm.toFixed(1)} мм`;
+
+            document.getElementById(
+                "infoColumnGap"
+            ).textContent =
+                `${COLUMN_GAP_MM.toFixed(1)} мм`;
+
+            document.getElementById(
+                "infoRowsPerPage"
+            ).textContent =
+                settings.rowsPerPage;
+
+            document.getElementById(
+                "previewContainer"
+            ).style.display = "block";
+
+            document.body.classList.add(
+                "preview-mode"
+            );
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function closePreview() {
+            document.body.classList.remove(
+                "preview-mode"
+            );
+
+            document.getElementById(
+                "previewContainer"
+            ).style.display = "none";
+        }
+
+        document.getElementById(
+            "printBtn"
+        ).addEventListener(
+            "click",
+            () => {
+                window.print();
+            }
+        );
+
+        document.getElementById(
+            "closePreviewBtn"
+        ).addEventListener(
+            "click",
+            () => {
+                closePreview();
+            }
+        );
+    </script>
+</body>
+</html>

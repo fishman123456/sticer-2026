@@ -1,5 +1,4 @@
 # sticer-2026
 Для наклеек 7 - столбцов
-<img width="1866" height="661" alt="image" src="https://github.com/user-attachments/assets/318eefa7-0015-4271-b43a-0e7096258ccd" />
----
-<img width="1454" height="661" alt="image" src="https://github.com/user-attachments/assets/64a60193-348e-48eb-81bb-a7cc71acc84d" />
+<img width="932" height="867" alt="image" src="https://github.com/user-attachments/assets/18240cb7-ee45-4c98-a733-184de45db3cb" />
+
